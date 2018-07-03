@@ -5,8 +5,8 @@
 
 
   //find items required
- / var url = 'https://raw.githubusercontent.com/CTMSc/EvE-SDE-stuff/master/JSON.txt';
-  var url = 'https://github.com/fr00schn/googlescript/blob/master/TypID
+  // var url = 'https://raw.githubusercontent.com/CTMSc/EvE-SDE-stuff/master/JSON.txt';
+  var url = 'https://github.com/fr00schn/googlescript/blob/master/TypeID.txt';
   var jsonFeed = UrlFetchApp.fetch(url).getContentText();
   var json = JSON.parse(jsonFeed);
   
