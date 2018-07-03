@@ -1,0 +1,141 @@
+/**
+------ xxx functions version 0.9 -----
+**/
+
+
+
+  //find items required
+  var url = 'https://raw.githubusercontent.com/CTMSc/EvE-SDE-stuff/master/JSON.txt';
+  var jsonFeed = UrlFetchApp.fetch(url).getContentText();
+  var json = JSON.parse(jsonFeed);
+  
+  var arrLength = json[typeId].activities.invention.materials.length;
+  var i;
+  for (i = 0; i < arrLength; i++) {
+    var item = json[typeId].activities.invention.materials[i].typeID;
+    var quantities = json[typeId].activities.invention.materials[i].quantity;
+    
+    item = nameLookup(item);
+    
+    array.push([item, quantities]);   
+  }
+  return array
+}
+
+
+
+
+/**
+* Return cost indices for a solar system
+* @param {solarsystem} solarsystem, integer. The name of the solar system
+* @return List solar system cost indices.
+* @customfunction
+*/
+function getAdjustedPrice(typeID) {
+  if (isNaN(typeID)) {return "#no TypeID"}
+  
+  var url = 'https://esi.evetech.net/latest/markets/prices/?datasource=tranquility';
+  var jsonFeed = UrlFetchApp.fetch(url).getContentText();
+  var json = JSON.parse(jsonFeed);
+  var i = 0;
+  if(json) {
+    for(i in json) {
+      if (parseInt(json[i].type_id) == parseInt(typeID)) {
+        
+        return json[i].adjusted_price;
+      }
+    }
+  }
+} 
+
+
+
+
+/**
+* Return cost indices for a solar system
+* @param {solarsystem} solarsystem, integer. The name of the solar system
+* @return List solar system cost indices.
+* @customfunction
+*/
+function getIndustryIndex(solarsystem) {
+  
+  if(!solarsystem) {return "#no solarsystem"}
+  if(isNaN(solarsystem)) {return "#NaN"}
+  
+  var url = 'https://esi.evetech.net/latest/industry/systems/?datasource=tranquility';
+  var jsonFeed = UrlFetchApp.fetch(url).getContentText();
+  var json = JSON.parse(jsonFeed);
+  var i = 0;
+  if(json) {
+    for(i in json) {
+      if (parseInt(json[i].solar_system_id) == parseInt(solarsystem)) {
+        
+        var indexList = [];
+        var headers = ['Activity', 'Index'];
+        indexList.push(headers);
+        
+        var arrLength = json[i].cost_indices.length;
+        
+        for (var j = 0; j < arrLength; j++) {
+          indexList.push([json[i].cost_indices[j].activity, json[i].cost_indices[j].cost_index]);
+        }
+        
+        return indexList;
+      }
+    }
+  }
+} 
+
+
+/**
+* Returns the market price for a given item.
+*
+* @param {typeID} typeID the item ID of the product to look up.
+* @param {regionID} regionID (Optional) the region ID for the market to look up. Default: The Forge
+* @param {solarsystemID} solarsystemID (Optional) the solar system ID for the market to look up. Default: Jita
+* @param {stationID} stationID (Optional) the station ID for the market to look up. Default: Jita 4-4
+* @param {orderType} orderType (Optional) this should be set to "sell" or "buy" orders. Default: "sell"
+* @param {volumeAvrg} volumeAvrg (Optional) ignore. not working yet. Default: 1
+* @param {refresh} refresh (Optional) Change this value to force Google to refresh return value.
+* @return Item price.
+* @customfunction
+*/
+function getStationMarketPrice(typeID, regionID, solarsystemID, stationID, orderType, volumeAvrg, refresh) {
+  // Defaults
+  if (!regionID) {regionID = 10000002} // The Forge
+  if (!solarsystemID) {solarsystemID = 30000142} // Jita
+  if (!stationID) {stationID = 60003760} // 4-4 Caldari Navy Assambly Plant
+  if (!orderType) {orderType = "sell"}
+  if (!volumeAvrg) {volumeAvrg = 1} //not working yet -> disabled
+  if (isNaN(typeID)) {return "#No TypeID"}
+  
+  //debug
+  //if (!typeID) {typeID = 35}
+  
+  
+  var url = 'https://esi.evetech.net/latest/markets/' + regionID + '/orders/?datasource=tranquility&order_type=' + orderType + '&page=1&type_id=' + typeID;
+  var jsonFeed = UrlFetchApp.fetch(url).getContentText();
+  var json = JSON.parse(jsonFeed);
+  var i = 0;
+  var price;
+  
+  if(json) {
+    for(i in json) {
+      // json input
+      var jsonStationID = parseInt(json[i].location_id);
+      var jsonSolarsystemID = parseInt(json[i].system_id);
+      var jsonVolumeTotal = parseInt(json[i].volume_total);
+      
+      if (jsonStationID == parseInt(stationID) && jsonSolarsystemID == parseInt(solarsystemID)) {
+        
+        var jsonPrice = json[i].price;
+        
+        // Got price. Find cheaper
+        if (!price || jsonPrice < price){
+          var price = jsonPrice;
+        }
+      }
+    }
+    return price;
+  }
+}
