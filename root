@@ -1,12 +1,120 @@
 /**
------- xxx functions version 0.9 -----
+------ CTMS functions version 1.12 -----
 **/
 
 
+// manufacturing
+/**
+* Returns an Array of Items and Quantities
+* @param {blueprint} blueprint TypeID of a Blueprint
+* @param {headers} headers "true" if you want headers, describing the array
+* @return  an Array of Items and Quantities
+* @customfunction
+*/
+function bpManufacturing (blueprint, headers) {
+  
+  if (!blueprint) {
+    return "#no blueprint"
+  }
+  if (isNaN(blueprint)){
+    
+    blueprint = typeIdLookup(blueprint);
+    if (blueprint == undefined) {
+      return '#couldn\'t find Blueprint'
+    }
+  }
+  
+  var typeID = blueprint;
+  var array = [];
+  
+  //headers?
+  if (headers === true){
+    headers = 'true'}
+  else if (headers != 'true'){
+    headers = 'false'
+  }
+  if (headers.toLowerCase() === 'true') {
+    headers = ['Items', 'Quantity'];
+    array.push(headers); 
+  }
+  
+  // find items required
+  var url = 'https://raw.githubusercontent.com/CTMSc/EvE-SDE-stuff/master/JSON.txt';
+  var jsonFeed = UrlFetchApp.fetch(url).getContentText();
+  var json = JSON.parse(jsonFeed);
+  
+  var arrLength = json[typeID].activities.manufacturing.materials.length;
+  var i;
+  for (i = 0; i < arrLength; i++) {
+    var item = json[typeID].activities.manufacturing.materials[i].typeID;
+    var quantities = json[typeID].activities.manufacturing.materials[i].quantity;
+    
+    item = nameLookup(item);
+    
+    array.push([item, quantities]);
+  }
+  
+  return array
 }
+
+
+
+
+
+
+//invention
+/**
+* Returns an Array of Items and Quantities
+*
+* @param {blueprint} blueprint TypeID or Name of a Blueprint
+* @param {headers} headers "true" if you want headers, describing the array
+* @return an Array of Items and Quantities
+* @customfunction
+*/
+function bpInvention (blueprint, headers) {
+  
+  if (!blueprint) {
+    return "#no Blueprint"}
+  
+  if (isNaN(blueprint)){
+    
+    blueprint = typeIdLookup(blueprint);
+    if (blueprint == undefined) {
+      return '#couldn\'t find Blueprint'
+    }
+  }
+  
+  var typeId = blueprint;
+  
+  //get T1 blueprint for invention
+  var url = 'https://raw.githubusercontent.com/CTMSc/EvE-SDE-stuff/master/IndustryActivityProbability.txt'
+  var jsonFeed = UrlFetchApp.fetch(url).getContentText();
+  var json = JSON.parse(jsonFeed);
+  
+  var j = 0
+  for (j in json) {
+    if (json[j].productTypeID == typeId){
+      typeId = json[j].typeID;    
+    }
+  }
+  
+  
+  var array = [];
+  
+  //headers?
+  if (headers === true){
+    headers = 'true'}
+  else if (headers != 'true'){
+    headers = 'false'
+  }
+  if (headers.toLowerCase() === 'true') {
+    headers = ['Items', 'Quantity'];
+    array.push(headers); 
+  }
+  
+  
   //find items required
-  // var url = 'https://raw.githubusercontent.com/CTMSc/EvE-SDE-stuff/master/JSON.txt';
-  var url = 'https://github.com/fr00schn/googlescript/blob/master/TypeID.txt';
+  var url = 'https://raw.githubusercontent.com/CTMSc/EvE-SDE-stuff/master/JSON.txt';
   var jsonFeed = UrlFetchApp.fetch(url).getContentText();
   var json = JSON.parse(jsonFeed);
   
@@ -28,7 +136,8 @@
 
 /**
 * Return cost indices for a solar system
-* @param {solarsystem} solarsystem, integer. The name of the solar system
+*
+* @param {solarsystem} solarsystem integer. The name of the solar system
 * @return List solar system cost indices.
 * @customfunction
 */
@@ -53,9 +162,10 @@ function getAdjustedPrice(typeID) {
 
 
 /**
-* Return cost indices for a solar system
-* @param {solarsystem} solarsystem, integer. The name of the solar system
-* @return List solar system cost indices.
+* Returns cost indices for a solar system
+*
+* @param {solarsystem} solarsystem integer. The name of the solar system
+* @return List of solar system cost indices.
 * @customfunction
 */
 function getIndustryIndex(solarsystem) {
